@@ -14,10 +14,10 @@ services:
   mysql:
     image: mysql:8.0
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: yourdb
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: Oyewole2025
+      MYSQL_DATABASE: mseet_39093726_felicity
+      MYSQL_USER: mseet_39093726
+      MYSQL_PASSWORD: Oyewole2025
     ports:
       - "3306:3306"
     volumes:
