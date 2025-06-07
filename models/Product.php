@@ -19,41 +19,58 @@ class Product
 
     }
     // Fetch all products
-    public function getAllProducts()
-    {
-        try {
-            // $sql = "SELECT * FROM products ORDER BY created_at DESC";
-            $sql = "SELECT 
-    p.id,
-    p.product_name,
-    p.price,
-    p.rating,
-    p.total_stock,
-    p.discount_rate,
-    c.category_name,
-    p.image_1,
-    p.image_2,
-    p.image_3,
-    p.image_4,
-    p.image_5,
-    p.key_features,
-    p.description,
-    p.created_at
-FROM products p
-JOIN categories c ON p.category_id = c.id
-ORDER BY p.created_at DESC";
+  public function getAllProducts($limit, $offset)
+{
+    try {
+        // Get total row count
+        $countSql = "SELECT COUNT(*) as total FROM products";
+        $countStmt = $this->conn->prepare($countSql);
+        $countStmt->execute();
+        $total = (int) $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
 
-            $stmt = $this->conn->prepare($sql);
-            $stmt->execute();
+        // Get paginated records
+        $sql = "SELECT 
+            p.id,
+            p.product_name,
+            p.price,
+            p.rating,
+            p.total_stock,
+            p.discount_rate,
+            c.category_name,
+            p.image_1,
+            p.image_2,
+            p.image_3,
+            p.image_4,
+            p.image_5,
+            p.key_features,
+            p.description,
+            p.created_at
+        FROM products p
+        JOIN categories c ON p.category_id = c.id
+        ORDER BY p.created_at DESC
+        LIMIT :limit OFFSET :offset";
 
-            $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
 
-            return $products;
-        } catch (PDOException $e) {
-            // Log or handle the error appropriately
-            return ['error' => 'Failed to fetch products: ' . $e->getMessage()];
-        }
+        $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return [
+            'data' => $products,
+            'total' => $total
+        ];
+    } catch (PDOException $e) {
+        return [
+            'data' => [],
+            'total' => 0,
+            'error' => 'Failed to fetch products: ' . $e->getMessage()
+        ];
     }
+}
+
+
     public function getProductsByCategory($categoryId)
     {
         $query = "SELECT * FROM products WHERE category_id = :category_id";
@@ -66,7 +83,6 @@ ORDER BY p.created_at DESC";
 
         return $products;
     }
-
 
     public function deleteProduct($id)
     {

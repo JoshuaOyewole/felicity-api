@@ -11,37 +11,37 @@ class ProductController
     }
 
     public function getByCategory($categoryId)
-{
-    header('Content-Type: application/json');
+    {
+        header('Content-Type: application/json');
 
-    if (!is_numeric($categoryId)) {
-        http_response_code(400);
+        if (!is_numeric($categoryId)) {
+            http_response_code(400);
+            echo json_encode([
+                'status' => 400,
+                'error' => 'Invalid category ID'
+            ]);
+            return;
+        }
+
+        $products = $this->product->getProductsByCategory($categoryId);
+
+        if (empty($products)) {
+            http_response_code(404);
+            echo json_encode([
+                'status' => 404,
+                'message' => 'No products found for this category',
+                'data' => []
+            ]);
+            return;
+        }
+
+        http_response_code(200);
         echo json_encode([
-            'status' => 400,
-            'error' => 'Invalid category ID'
+            'status' => 200,
+            'message' => 'Products fetched successfully',
+            'data' => $products
         ]);
-        return;
     }
-
-    $products = $this->product->getProductsByCategory($categoryId);
-
-    if (empty($products)) {
-        http_response_code(404);
-        echo json_encode([
-            'status' => 404,
-            'message' => 'No products found for this category',
-            'data' => []
-        ]);
-        return;
-    }
-
-    http_response_code(200);
-    echo json_encode([
-        'status' => 200,
-        'message' => 'Products fetched successfully',
-        'data' => $products
-    ]);
-}
 
 
     public function getOne($id)
@@ -68,28 +68,55 @@ class ProductController
         ]);
     }
 
-    public function getAll()
-    {
-        header('Content-Type: application/json');
-        $allProducts = $this->product->getAllProducts();
+   public function getAll()
+{
+    header('Content-Type: application/json');
 
-        if (empty($allProducts)) {
-            http_response_code(404);
-            echo json_encode([
-                'status' => 404,
-                'message' => 'No product found',
-                'data' => []
-            ]);
-            return;
-        }
+    // Get page and limit from query params
+    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+    $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
 
-        http_response_code(200);
+    $page = max($page, 1);
+    $limit = max($limit, 1);
+    $offset = ($page - 1) * $limit;
+
+    // Get paginated data
+    $result = $this->product->getAllProducts($limit, $offset);
+    $products = $result['data'];
+    $totalRows = $result['total'];
+
+    if (empty($products)) {
+        http_response_code(404);
         echo json_encode([
-            'status' => 200,
-            'message' => 'Product fetched successfully',
-            'data' => $allProducts
+            'status' => 404,
+            'message' => 'No product found',
+            'data' => [],
+            'pagination' => [
+                'current_page' => $page,
+                'total_pages' => 0,
+                'total_rows' => 0
+            ]
         ]);
+        return;
     }
+
+    $totalPages = ceil($totalRows / $limit);
+
+    http_response_code(200);
+    echo json_encode([
+        'status' => 200,
+        'message' => 'Product fetched successfully',
+        'data' => $products,
+        'pagination' => [
+            'current_page' => $page,
+            'total_pages' => $totalPages,
+            'total_rows' => $totalRows
+        ]
+    ]);
+}
+
+
+
     public function create()
     {
         header('Content-Type: application/json');
