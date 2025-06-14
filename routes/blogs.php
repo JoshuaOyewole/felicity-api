@@ -21,6 +21,7 @@ switch ($_SERVER['REQUEST_METHOD']) {
         break;
     case 'POST':
         // Create a new blog
+        requireSuperAdmin();
         $blogController->create();
         break;
 
@@ -29,6 +30,7 @@ switch ($_SERVER['REQUEST_METHOD']) {
         $matches = [];
         if (preg_match('/^\/api\/blogs\/(\d+)$/', $_SERVER['REQUEST_URI'], $matches)) {
             // Call the delete function with the blog ID
+            requireSuperAdmin();
             $blogController->delete($matches[1]);
         } else {
             // Return 400 if the URL does not have a valid blog ID
@@ -45,6 +47,7 @@ switch ($_SERVER['REQUEST_METHOD']) {
         $matches = [];
         if (preg_match('/^\/api\/blogs\/(\d+)$/', $_SERVER['REQUEST_URI'], $matches)) {
             $id = $matches[1];
+            requireSuperAdmin();
             $blogController->update($id);  // Call the update method from the controller
         } else {
             http_response_code(400);

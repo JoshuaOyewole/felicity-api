@@ -9,7 +9,7 @@ class BlogController
     {
         $this->blog = new Blog($db);
     }
- public function getOne($id)
+    public function getOne($id)
     {
         header('Content-Type: application/json');
 
@@ -35,23 +35,46 @@ class BlogController
     public function getAll()
     {
         header('Content-Type: application/json');
-        $allArticles = $this->blog->getAllBlogs();
+
+        // Get page and limit from query params
+        $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
+        $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 10;
+
+        $page = max($page, 1);
+        $limit = max($limit, 1);
+        $offset = ($page - 1) * $limit;
+
+        $result = $this->blog->getAllBlogs($limit, $offset);
+        $allArticles = $result['data'];
+        $totalRows = $result['total'];
 
         if (empty($allArticles)) {
-            http_response_code(404);
+            http_response_code(200);
             echo json_encode([
                 'status' => 404,
                 'message' => 'No article found',
-                'data' => []
+                'data' => [],
+                'pagination' => [
+                    'current_page' => $page,
+                    'total_pages' => 0,
+                    'total_rows' => 0
+                ]
             ]);
             return;
         }
+
+        $totalPages = ceil($totalRows / $limit);
 
         http_response_code(200);
         echo json_encode([
             'status' => 200,
             'message' => 'Articles fetched successfully',
-            'data' => $allArticles
+            'data' => $allArticles,
+            'pagination' => [
+                'current_page' => $page,
+                'total_pages' => $totalPages,
+                'total_rows' => $totalRows
+            ]
         ]);
     }
     public function create()

@@ -22,14 +22,16 @@ switch ($_SERVER['REQUEST_METHOD']) {
             $installerController->getAll();
         }
         break;
-       
+
     case 'POST':
+        requireSuperAdmin();
         $installerController->create();
         break;
 
     case 'DELETE':
         $matches = [];
         if (preg_match('/^\/api\/installers\/(\d+)$/', $_SERVER['REQUEST_URI'], $matches)) {
+            requireSuperAdmin();
             $installerController->delete($matches[1]);
         } else {
             http_response_code(400);
@@ -44,6 +46,7 @@ switch ($_SERVER['REQUEST_METHOD']) {
         $matches = [];
         if (preg_match('/^\/api\/installers\/(\d+)$/', $_SERVER['REQUEST_URI'], $matches)) {
             $id = $matches[1];
+            requireSuperAdmin();
             $installerController->update($id);
         } else {
             http_response_code(400);

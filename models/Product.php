@@ -19,17 +19,17 @@ class Product
 
     }
     // Fetch all products
-  public function getAllProducts($limit, $offset)
-{
-    try {
-        // Get total row count
-        $countSql = "SELECT COUNT(*) as total FROM products";
-        $countStmt = $this->conn->prepare($countSql);
-        $countStmt->execute();
-        $total = (int) $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+    public function getAllProducts($limit, $offset)
+    {
+        try {
+            // Get total row count
+            $countSql = "SELECT COUNT(*) as total FROM products";
+            $countStmt = $this->conn->prepare($countSql);
+            $countStmt->execute();
+            $total = (int) $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
 
-        // Get paginated records
-        $sql = "SELECT 
+            // Get paginated records
+            $sql = "SELECT 
             p.id,
             p.product_name,
             p.price,
@@ -50,38 +50,66 @@ class Product
         ORDER BY p.created_at DESC
         LIMIT :limit OFFSET :offset";
 
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-        $stmt->execute();
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+            $stmt->execute();
 
-        $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        return [
-            'data' => $products,
-            'total' => $total
-        ];
-    } catch (PDOException $e) {
-        return [
-            'data' => [],
-            'total' => 0,
-            'error' => 'Failed to fetch products: ' . $e->getMessage()
-        ];
+            return [
+                'data' => $products,
+                'total' => $total
+            ];
+        } catch (PDOException $e) {
+            return [
+                'data' => [],
+                'total' => 0,
+                'error' => 'Failed to fetch products: ' . $e->getMessage()
+            ];
+        }
     }
-}
 
-
-    public function getProductsByCategory($categoryId)
+    public function getProductsByCategory($categoryId, $limit, $offset)
     {
-        $query = "SELECT * FROM products WHERE category_id = :category_id";
+        try {
+            // Count total products in this category
+            $countSql = "SELECT COUNT(*) as total FROM products WHERE category_id = :category_id";
+            $countStmt = $this->conn->prepare($countSql);
+            $countStmt->bindParam(':category_id', $categoryId, PDO::PARAM_INT);
+            $countStmt->execute();
+            $total = (int) $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':category_id', $categoryId, PDO::PARAM_INT);
-        $stmt->execute();
+            // Sanitize limit and offset as integers
+            $limit = (int) $limit;
+            $offset = (int) $offset;
 
-        $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $query = "
+            SELECT p.*, c.category_name
+            FROM products p
+            JOIN categories c ON p.category_id = c.id
+            WHERE p.category_id = :category_id
+            ORDER BY p.created_at DESC
+            LIMIT $limit OFFSET $offset
+        ";
 
-        return $products;
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':category_id', $categoryId, PDO::PARAM_INT);
+            $stmt->execute();
+
+            $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return [
+                'data' => $products,
+                'total' => $total
+            ];
+        } catch (PDOException $e) {
+            return [
+                'data' => [],
+                'total' => 0,
+                'error' => 'Failed to fetch products: ' . $e->getMessage()
+            ];
+        }
     }
 
     public function deleteProduct($id)

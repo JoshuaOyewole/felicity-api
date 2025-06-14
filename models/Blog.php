@@ -19,20 +19,36 @@ class Blog
 
     }
     // Fetch all blogs
-    public function getAllBlogs()
+    public function getAllBlogs($limit, $offset)
     {
         try {
-            $sql = "SELECT * FROM articles ORDER BY created_at DESC";
+
+            $countSql = "SELECT COUNT(*) as total FROM articles";
+            $countStmt = $this->conn->prepare($countSql);
+            $countStmt->execute();
+            $total = (int) $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+
+            $sql = "SELECT * FROM articles ORDER BY created_at DESC LIMIT :limit OFFSET :offset";
 
             $stmt = $this->conn->prepare($sql);
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
             $stmt->execute();
+
 
             $blogs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            return $blogs;
+            return [
+                'data' => $blogs,
+                'total' => $total
+            ];
         } catch (PDOException $e) {
             // Log or handle the error appropriately
-            return ['error' => 'Failed to fetch blogs: ' . $e->getMessage()];
+            return [
+                'data' => [],
+                'total' => 0,
+                'error' => 'Failed to fetch products: ' . $e->getMessage()
+            ];
         }
     }
     public function deleteBlog($id)
@@ -68,6 +84,7 @@ class Blog
             $sql = "SELECT 
                     *
                 FROM articles 
+                WHERE id =:id
                 LIMIT 1";
             $stmt = $this->conn->prepare($sql);
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);

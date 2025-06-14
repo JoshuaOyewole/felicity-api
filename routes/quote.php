@@ -27,6 +27,7 @@ switch ($_SERVER['REQUEST_METHOD']) {
     case 'DELETE':
         $matches = [];
         if (preg_match('/^\/api\/quotes\/(\d+)$/', $_SERVER['REQUEST_URI'], $matches)) {
+             requireSuperAdmin();
             $quoteController->delete($matches[1]);
         } else {
             http_response_code(400);

@@ -7,18 +7,38 @@ $db = $database->connect();
 
 $stateController = new StateController($db);
 
+// Get only the path without query string
+$requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-// Assuming the $stateController is already instantiated somewhere earlier in the code
 switch ($_SERVER['REQUEST_METHOD']) {
     case 'GET':
         $matches = [];
-        // Check if the URL matches /api/states/{id}
-        if (preg_match('/^\/api\/states\/(\d+)$/', $_SERVER['REQUEST_URI'], $matches)) {
+
+        // Match /api/states/{id}
+        if (preg_match('/^\/api\/states\/(\d+)$/', $requestUri, $matches)) {
             $stateController->getOne($matches[1]); // Fetch a single state
-        } else {
-            $stateController->getAll(); // Fetch all states
+        }
+        // Match /api/states-with-projects
+        else if ($requestUri === '/api/states-with-projects') {
+            $stateController->getStatesWithProjects();
+        }
+        else if ($requestUri === '/api/states-with-installers') {
+            $stateController->getStatesWithInstallers();
+        }
+        // Match /api/states
+        else if ($requestUri === '/api/states') {
+            $stateController->getAll();
+        }
+        // If route doesn't match any of the above
+        else {
+            http_response_code(404);
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Endpoint not found'
+            ]);
         }
         break;
+
     case 'POST':
         // Create a new state
         $stateController->create();
@@ -28,6 +48,7 @@ switch ($_SERVER['REQUEST_METHOD']) {
         // Check if the URL matches the pattern for state ID
         $matches = [];
         if (preg_match('/^\/api\/states\/(\d+)$/', $_SERVER['REQUEST_URI'], $matches)) {
+             requireSuperAdmin();
             // Call the delete function with the state ID
             $stateController->delete($matches[1]);
         } else {
@@ -45,6 +66,7 @@ switch ($_SERVER['REQUEST_METHOD']) {
         $matches = [];
         if (preg_match('/^\/api\/states\/(\d+)$/', $_SERVER['REQUEST_URI'], $matches)) {
             $id = $matches[1];
+             requireSuperAdmin();
             $stateController->update($id);  // Call the update method from the controller
         } else {
             http_response_code(400);

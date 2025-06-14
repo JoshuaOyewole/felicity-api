@@ -9,7 +9,7 @@ class StateController
     {
         $this->state = new States($db);
     }
- public function getOne($id)
+    public function getOne($id)
     {
         header('Content-Type: application/json');
 
@@ -118,6 +118,49 @@ class StateController
         }
     }
     // In the controller
+    public function getStatesWithProjects()
+    {
+        header('Content-Type: application/json');
+        $result = $this->state->getStatesWithProjects();
+
+        if ($result['status'] === 'success') {
+            http_response_code(200);
+            echo json_encode([
+                'status' => 200,
+                'message' => 'States with projects retrieved successfully',
+                'data' => $result['data']
+            ]);
+        } else {
+            http_response_code(500);
+            echo json_encode([
+                'status' => 500,
+                'message' => 'An error occurred',
+                'data' => []
+            ]);
+        }
+    }
+    public function getStatesWithInstallers()
+    {
+        header('Content-Type: application/json');
+        $result = $this->state->getStatesWithinstallers();
+
+        if ($result['status'] === 'success') {
+            http_response_code(200);
+            echo json_encode([
+                'status' => 200,
+                'message' => 'States with installers retrieved successfully',
+                'data' => $result['data']
+            ]);
+        } else {
+            http_response_code(500);
+            echo json_encode([
+                'status' => 500,
+                'message' => 'An error occurred',
+                'data' => []
+            ]);
+        }
+    }
+
 
     public function update($id)
     {

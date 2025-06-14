@@ -1,38 +1,40 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../controllers/ProductController.php';
+require_once __DIR__ . '/../middleware/auth.php';
 
 $database = new Database();
 $db = $database->connect();
 
 $productController = new ProductController($db);
 
+// Always parse URL path without query string
+$requestPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-// Assuming the $productController is already instantiated somewhere earlier in the code
 switch ($_SERVER['REQUEST_METHOD']) {
     case 'GET':
         $matches = [];
-        // Check if URL matches /api/products/category/{categoryId}
-        if (preg_match('/^\/api\/products\/category\/(\d+)$/', $_SERVER['REQUEST_URI'], $matches)) {
+
+        if (preg_match('/^\/api\/products\/category\/(\d+)$/', $requestPath, $matches)) {
             $productController->getByCategory($matches[1]);
-        }
-        // Check if URL matches /api/products/{id}
-        else if (preg_match('/^\/api\/products\/(\d+)$/', $_SERVER['REQUEST_URI'], $matches)) {
+        } else if (preg_match('/^\/api\/products\/(\d+)$/', $requestPath, $matches)) {
             $productController->getOne($matches[1]);
         } else {
             $productController->getAll();
         }
         break;
-       
 
     case 'POST':
+        requireSuperAdmin();
         $productController->create();
         break;
 
     case 'DELETE':
         $matches = [];
-        if (preg_match('/^\/api\/products\/(\d+)$/', $_SERVER['REQUEST_URI'], $matches)) {
+        if (preg_match('/^\/api\/products\/(\d+)$/', $requestPath, $matches)) {
+            requireSuperAdmin();
             $productController->delete($matches[1]);
+
         } else {
             http_response_code(400);
             echo json_encode([
@@ -44,9 +46,9 @@ switch ($_SERVER['REQUEST_METHOD']) {
 
     case 'PUT':
         $matches = [];
-        if (preg_match('/^\/api\/products\/(\d+)$/', $_SERVER['REQUEST_URI'], $matches)) {
-            $id = $matches[1];
-            $productController->update($id);
+        if (preg_match('/^\/api\/products\/(\d+)$/', $requestPath, $matches)) {
+               requireSuperAdmin();
+            $productController->update($matches[1]);
         } else {
             http_response_code(400);
             echo json_encode([
@@ -64,6 +66,3 @@ switch ($_SERVER['REQUEST_METHOD']) {
         ]);
         break;
 }
-
-
-?>

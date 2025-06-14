@@ -35,6 +35,73 @@ class States
             return ['error' => 'Failed to fetch states: ' . $e->getMessage()];
         }
     }
+
+    public function getStatesWithProjects()
+    {
+        try {
+            $query = "SELECT DISTINCT 
+                s.id, 
+                s.state_name, 
+                s.state_logo
+            FROM 
+                states s
+            INNER JOIN 
+                project_showcases ps ON s.id = ps.projectState
+            ORDER BY 
+                s.state_name ASC
+        ";
+
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+
+            $states = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return [
+                'status' => 'success',
+                'data' => $states
+            ];
+        } catch (PDOException $e) {
+            return [
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'data' => []
+            ];
+        }
+    }
+    public function getStatesWithInstallers()
+    {
+        try {
+            $query = "SELECT DISTINCT 
+                s.id, 
+                s.state_name, 
+                s.state_logo
+            FROM 
+                states s
+            INNER JOIN 
+                installers ps ON s.id = ps.state_id
+            ORDER BY 
+                s.state_name ASC
+        ";
+
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute();
+
+            $states = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return [
+                'status' => 'success',
+                'data' => $states
+            ];
+        } catch (PDOException $e) {
+            return [
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'data' => []
+            ];
+        }
+    }
+
+
     public function deleteState($id)
     {
         try {
@@ -87,7 +154,7 @@ class States
 
             if (
                 !isset($data['state_name']) ||
-                !isset($data['state_logo']) 
+                !isset($data['state_logo'])
             ) {
                 return ['error' => 'missing required fields (state name and state_logo)'];
             }

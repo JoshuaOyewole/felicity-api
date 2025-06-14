@@ -23,7 +23,17 @@ class ProductController
             return;
         }
 
-        $products = $this->product->getProductsByCategory($categoryId);
+        $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
+        $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 10;
+
+        $page = max($page, 1);
+        $limit = max($limit, 1);
+        $offset = ($page - 1) * $limit;
+
+        $result = $this->product->getProductsByCategory($categoryId, $limit, $offset);
+
+        $products = $result['data'];
+        $totalRows = $result['total'];
 
         if (empty($products)) {
             http_response_code(404);
@@ -35,11 +45,19 @@ class ProductController
             return;
         }
 
+        $totalPages = ceil($totalRows / $limit);
+
         http_response_code(200);
         echo json_encode([
             'status' => 200,
             'message' => 'Products fetched successfully',
-            'data' => $products
+            'data' => $products,
+            'pagination' => [
+                'total' => $totalRows,
+                'page' => $page,
+                'limit' => $limit,
+                'total_pages' => $totalPages
+            ]
         ]);
     }
 
@@ -68,54 +86,52 @@ class ProductController
         ]);
     }
 
-   public function getAll()
-{
-    header('Content-Type: application/json');
+    public function getAll()
+    {
+        header('Content-Type: application/json');
 
-    // Get page and limit from query params
-    $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-    $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+        // Get page and limit from query params
+        $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
+        $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 10;
 
-    $page = max($page, 1);
-    $limit = max($limit, 1);
-    $offset = ($page - 1) * $limit;
+        $page = max($page, 1);
+        $limit = max($limit, 1);
+        $offset = ($page - 1) * $limit;
 
-    // Get paginated data
-    $result = $this->product->getAllProducts($limit, $offset);
-    $products = $result['data'];
-    $totalRows = $result['total'];
+        // Get paginated data
+        $result = $this->product->getAllProducts($limit, $offset);
+        $products = $result['data'];
+        $totalRows = $result['total'];
 
-    if (empty($products)) {
-        http_response_code(404);
+        if (empty($products)) {
+            http_response_code(404);
+            echo json_encode([
+                'status' => 404,
+                'message' => 'No product found',
+                'data' => [],
+                'pagination' => [
+                    'current_page' => $page,
+                    'total_pages' => 0,
+                    'total_rows' => 0
+                ]
+            ]);
+            return;
+        }
+
+        $totalPages = ceil($totalRows / $limit);
+
+        http_response_code(200);
         echo json_encode([
-            'status' => 404,
-            'message' => 'No product found',
-            'data' => [],
+            'status' => 200,
+            'message' => 'Product fetched successfully',
+            'data' => $products,
             'pagination' => [
                 'current_page' => $page,
-                'total_pages' => 0,
-                'total_rows' => 0
+                'total_pages' => $totalPages,
+                'total_rows' => $totalRows
             ]
         ]);
-        return;
     }
-
-    $totalPages = ceil($totalRows / $limit);
-
-    http_response_code(200);
-    echo json_encode([
-        'status' => 200,
-        'message' => 'Product fetched successfully',
-        'data' => $products,
-        'pagination' => [
-            'current_page' => $page,
-            'total_pages' => $totalPages,
-            'total_rows' => $totalRows
-        ]
-    ]);
-}
-
-
 
     public function create()
     {
