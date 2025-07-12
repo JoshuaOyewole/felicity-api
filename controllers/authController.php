@@ -13,7 +13,10 @@ function loginSuperAdmin()
 
     if (!$email || !$password) {
         http_response_code(400);
-        echo json_encode(['error' => 'Email and password are required']);
+        echo json_encode([
+            'error' => 'Email and password are required',
+            'status' => 400,
+        ]);
         return;
     }
 
@@ -21,13 +24,19 @@ function loginSuperAdmin()
 
     if (!$admin || !password_verify($password, $admin['password'])) {
         http_response_code(401);
-        echo json_encode(['error' => 'Invalid email or password']);
+        echo json_encode([
+            'error' => 'Invalid email or password',
+            'status' => 401,
+        ]);
         return;
     }
 
     if ($admin['role'] !== 'admin') {
         http_response_code(403);
-        echo json_encode(['error' => 'Access denied. Not a Super Admin']);
+        echo json_encode([
+            'status' => 403,
+            'error' => 'Access denied. Not a Super Admin'
+        ]);
         return;
     }
 
@@ -37,8 +46,9 @@ function loginSuperAdmin()
         'expires' => time() + 60 * 60 * 24,
         'httponly' => true,
         'path' => '/',
-        'samesite' => 'Lax'
-        // 'secure' => true // Only enable in HTTPS
+        'samesite' => 'Lax',
+        'secure' => true, // Only enable in HTTPS
+        'domain' => '.felicitysolar.ng',
     ]);
 
     http_response_code(200);

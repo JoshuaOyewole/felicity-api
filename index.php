@@ -9,7 +9,9 @@ EnvLoader::load(__DIR__);
 
 // === CORS Headers for all responses ===
 //header("Access-Control-Allow-Origin: " . $_ENV['APP_URL']);
-header("Access-Control-Allow-Origin:  http://localhost:3000");
+
+
+header("Access-Control-Allow-Origin:  http://localhost:3000"); // Allow all origins for development
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Credentials: true");

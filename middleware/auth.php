@@ -3,6 +3,7 @@ require_once __DIR__ . '/../utils/jwt.php'; // Wherever your JWT helper lives
 
 function requireSuperAdmin()
 {
+
     if (!isset($_COOKIE['token'])) {
         http_response_code(401);
         echo json_encode([

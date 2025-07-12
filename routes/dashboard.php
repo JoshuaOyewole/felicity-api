@@ -10,7 +10,6 @@ $controller = new DashboardController($db);
 $requestMethod = $_SERVER['REQUEST_METHOD'];
 
 if ($requestMethod === 'GET') {
-     requireSuperAdmin();
     $controller->getStats();
 } else {
     http_response_code(405);
