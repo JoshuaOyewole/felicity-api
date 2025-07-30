@@ -32,6 +32,13 @@ class MailService
 
     return $adminSent && $userSent;
   }
+  public function sendOrderNotification(array $quote): bool
+  {
+    $adminSent = $this->sendOrderRequestNotification($quote);
+    $userSent = $this->sendUserPurchaseFollowUp($quote);
+
+    return $adminSent && $userSent;
+  }
 
   private function sendAdminNotification(array $quote): bool
   {
@@ -94,6 +101,7 @@ class MailService
         <p style="margin-bottom: 10px">
           <strong>Email:</strong> {$quote['email']}
         </p>
+    
         <p style="margin-bottom: 10px">
           <strong>Location:</strong> {$quote['location']}
         </p>
@@ -194,6 +202,9 @@ HTML;
         </p>
         <p style="margin-bottom: 10px">
           <strong>Product:</strong> {$data['product_name']}
+        </p>
+        <p style="margin-bottom: 10px">
+          <strong>Phone:</strong> {$data['phone']}
         </p>
         <p style="margin-bottom: 10px">
           <strong>Qty:</strong> {$data['qty']}
@@ -317,7 +328,7 @@ HTML;
 </html>
 HTML;
 
-      $mailer->send();
+       $mailer->send();
       return true;
     } catch (Exception $e) {
       error_log("Admin mail error: " . $e->getMessage());
@@ -342,6 +353,38 @@ HTML;
     </div>
     <h3>Hi {$quote['fullnames']},</h3>
     <p>Thank you for submitting your quotation request to <strong>{$_ENV['APP_NAME']}</strong>.</p>
+    <p>We’ve received your request and our team will get in touch with you shortly.</p>
+    <p>If you have any urgent questions, feel free to reply to this email.</p>
+    <br />
+    <p>Warm regards,<br />The Felicity Solar Team</p>
+  </body>
+</html>
+HTML;
+
+      $mailer->send();
+      return true;
+    } catch (Exception $e) {
+      error_log("Follow-up mail error: " . $e->getMessage());
+      return false;
+    }
+  }
+  private function sendUserPurchaseFollowUp(array $quote): bool
+  {
+    try {
+      $mailer = $this->createMailer();
+
+      $mailer->setFrom($_ENV['SMTP_FROM'], $_ENV['APP_NAME']);
+      $mailer->addAddress($quote['email'], $quote['fullnames']);
+      $mailer->Subject = 'We Received Your Order';
+      $mailer->Body = <<<HTML
+<html>
+  <head><meta charset="UTF-8" /></head>
+  <body style="font-family: Arial, sans-serif; padding: 20px;">
+    <div style="text-align: center; margin-bottom: 30px;">
+      <img  src="{$_ENV['APP_URL']}/logo.png" alt="Felicity Solar Logo" style="max-width: 180px;" />
+    </div>
+    <h3>Hi {$quote['fullnames']},</h3>
+    <p>Thank you for 'making your order on our website '<strong>{$_ENV['APP_NAME']}</strong>.</p>
     <p>We’ve received your request and our team will get in touch with you shortly.</p>
     <p>If you have any urgent questions, feel free to reply to this email.</p>
     <br />

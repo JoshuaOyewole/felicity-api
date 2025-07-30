@@ -47,8 +47,8 @@ function loginSuperAdmin()
         'httponly' => true,
         'path' => '/',
         'samesite' => 'Lax',
-        'secure' => true, // Only enable in HTTPS
-        'domain' => '.felicitysolar.ng',
+        //'secure' => true, // Only enable in HTTPS
+       // 'domain' => '.felicitysolar.ng',
     ]);
 
     http_response_code(200);

@@ -56,6 +56,7 @@ class OrderRequest
     {
         try {
             $sql = "INSERT INTO order_requests (product_name, email, phone,fullnames, additionalMessage,qty, created_at) VALUES (:product_name, :email, :phone, :fullnames, :additionalMessage, :qty, NOW())";
+
             $stmt = $this->conn->prepare($sql);
 
             if (!isset($data['product_name']) || !isset($data['email']) || !isset($data['phone']) || !isset($data['qty']) || !isset($data['fullnames'])) {

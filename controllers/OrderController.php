@@ -111,7 +111,8 @@ class OrderRequestController
         } elseif ($result) {
             // Send email notification
             $mailService = new MailService();
-            $emailSent = $mailService->sendOrderRequestNotification($data);
+           // $emailSent = $mailService->sendOrderRequestNotification($data);
+            $emailSent = $mailService->sendOrderNotification($data);
 
             if (!$emailSent) {
                 error_log("Failed to send email notification for order with ID $result");
